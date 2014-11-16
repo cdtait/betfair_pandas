@@ -1,0 +1,56 @@
+diff --git a/betfair/betfair.py b/betfair/betfair.py
+index f4b9d0a..725c890 100644
+--- a/betfair/betfair.py
++++ b/betfair/betfair.py
+@@ -55,7 +55,7 @@ class Betfair(object):
+         payload = utils.make_payload(method, params)
+         response = self.session.post(
+             API_URL,
+-            data=json.dumps(payload),
++            data=json.dumps(payload, default=utils._dthandler),
+             headers=self.headers,
+         )
+         utils.check_status_code(response, codes=codes)
+@@ -204,7 +204,7 @@ class Betfair(object):
+ 
+         """
+         return self.make_api_request(
+-            'listCountries',
++            'listVenues',
+             utils.get_kwargs(locals()),
+             model=models.VenueResult,
+         )
+diff --git a/betfair/models.py b/betfair/models.py
+index 83d6e9e..8aa195d 100644
+--- a/betfair/models.py
++++ b/betfair/models.py
+@@ -99,7 +99,7 @@ class PriceSize(BetfairModel):
+ class StartingPrices(BetfairModel):
+     near_price = Field(DataType(float))
+     far_price = Field(DataType(float))
+-    back_state_taken = Field(ModelType(PriceSize))
++    back_stake_taken = Field(ModelType(PriceSize))
+     lay_liability_taken = Field(ModelType(PriceSize))
+     actual_SP = Field(DataType(float))
+ 
+diff --git a/betfair/utils.py b/betfair/utils.py
+index 6a59659..a764b9f 100644
+--- a/betfair/utils.py
++++ b/betfair/utils.py
+@@ -124,3 +124,16 @@ def requires_login(func, *args, **kwargs):
+     if self.session_token:
+         return func(*args, **kwargs)
+     raise exceptions.BetfairError('Not logged in')
++
++def _dthandler(obj):
++	"""
++	fix datetime objects for JSON
++	"""
++	# for datetime objects
++	if hasattr(obj, 'isoformat'):
++		return obj.isoformat()
++	# for enum objects
++	if hasattr(obj,'name'):
++		return obj.name
++	else:
++		raise TypeError, 'Object of type %s with value of %s is not JSON serializable'
