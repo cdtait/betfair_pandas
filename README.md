@@ -44,19 +44,18 @@ Each sample will need to have user,password,ssl certificate and app key set
 ```python
     from betfair.models import MarketFilter
     from betfair import Betfair
-
-
     import betfair_pandas as bp
     import datetime
+    import dateutil
     import pandas as pd
-
-
+```
+```python
     # ssologin
     # To use this you will need app_key,cert_file,username,password
     client=Betfair(app_key,cert_file)
     client.login(username,password)
-
-
+```
+```python
     # List horse racing event ids
     event_types=bp.list_event_types(client,filter={'textQuery':"Horse Racing"})
 
@@ -66,166 +65,77 @@ Each sample will need to have user,password,ssl certificate and app key set
                   'marketCountries':[country_code],
                   'marketTypeCodes':["WIN"],
                   'marketStartTime':{'from':datetime.datetime.now()}}
-
-
+```
+```python
     # First 5 horse races, win market, from now
     races=bp.list_market_catalogue(client,
       filter=marketFilter,
-      market_projection=['COMPETITION','EVENT','EVENT_TYPE','MARKET_DESCRIPTION','RUNNER_DESCRIPTION','MARKET_START_TIME'],
+      market_projection=['COMPETITION','EVENT','EVENT_TYPE','MARKET_DESCRIPTION',
+                         'RUNNER_DESCRIPTION','MARKET_START_TIME'],
       sort="FIRST_TO_START",
       max_results=5
     )
-
-
+```
+```python
     # Get a summary set of columns for winHorseRacing from description
-    summaryDesc=races['description'][['marketId','marketName','event.venue','event.name','marketStartTime']]
+    summaryDesc=races['description'][['marketId','marketName','event.venue',
+                                      'event.name','marketStartTime']]
     # Get a summary set of the runners names
     summaryRunners=races['runners'][['marketId','selectionId','runnerName']]
     # Join the 2 together baes on the marketId to show summary of the runners in the races together
     summaryRaces=pd.merge(summaryDesc,summaryRunners,on='marketId')
-
-
+```
+```python
+    summaryDesc.groupby(['marketStartTime','event.venue'])
+    print('Races:')
+    for name, group in summaryDesc.groupby(['marketStartTime','event.venue']):
+        print("{0:s} {1:s} {2:s} {3:%I:%M%p}".format(group.values[0][1],
+                                                                group.values[0][2],
+                                                                group.values[0][3],
+                                                                dateutil.parser.parse(group.values[0][4])
+                                                                ))
+```
+```coffee
+    Races:
+    2m Hcap Chs Fakenham Fake 18th Nov 03:30PM
+    7f Hcap Southwell Sthl 18th Nov 03:40PM
+    2m NHF Doncaster Donc 18th Nov 03:50PM
+    1m Nursery Lingfield Ling 19th Nov 12:00PM
+    2m Mdn Hrd Hexham Hex 19th Nov 12:20PM
+```
+```python
     # First race
     marketId=races['description'].marketId[0]
-
-
-    # First race summary
-    firstRace=summaryRaces.query('marketId=="'+marketId+'"')
-    firstRace
-
 ```
-
-<div style="max-height:1000px;max-width:1500px;overflow:auto;">
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>marketId</th>
-      <th>marketName</th>
-      <th>event.venue</th>
-      <th>event.name</th>
-      <th>marketStartTime</th>
-      <th>selectionId</th>
-      <th>runnerName</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td> 1.116406554</td>
-      <td> 2m Nov Hrd</td>
-      <td> Plumpton</td>
-      <td> Plump 17th Nov</td>
-      <td> 2014-11-17T13:00:00.000Z</td>
-      <td> 6865392</td>
-      <td>           Seedling</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td> 1.116406554</td>
-      <td> 2m Nov Hrd</td>
-      <td> Plumpton</td>
-      <td> Plump 17th Nov</td>
-      <td> 2014-11-17T13:00:00.000Z</td>
-      <td> 7633363</td>
-      <td>          As De Mee</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td> 1.116406554</td>
-      <td> 2m Nov Hrd</td>
-      <td> Plumpton</td>
-      <td> Plump 17th Nov</td>
-      <td> 2014-11-17T13:00:00.000Z</td>
-      <td> 9002287</td>
-      <td>       Stars Royale</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td> 1.116406554</td>
-      <td> 2m Nov Hrd</td>
-      <td> Plumpton</td>
-      <td> Plump 17th Nov</td>
-      <td> 2014-11-17T13:00:00.000Z</td>
-      <td> 1119547</td>
-      <td>           Sea Wall</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td> 1.116406554</td>
-      <td> 2m Nov Hrd</td>
-      <td> Plumpton</td>
-      <td> Plump 17th Nov</td>
-      <td> 2014-11-17T13:00:00.000Z</td>
-      <td> 8199435</td>
-      <td> The Geegeez Geegee</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td> 1.116406554</td>
-      <td> 2m Nov Hrd</td>
-      <td> Plumpton</td>
-      <td> Plump 17th Nov</td>
-      <td> 2014-11-17T13:00:00.000Z</td>
-      <td> 6251329</td>
-      <td>           Dellbuoy</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td> 1.116406554</td>
-      <td> 2m Nov Hrd</td>
-      <td> Plumpton</td>
-      <td> Plump 17th Nov</td>
-      <td> 2014-11-17T13:00:00.000Z</td>
-      <td> 8930741</td>
-      <td>  Knockyoursocksoff</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td> 1.116406554</td>
-      <td> 2m Nov Hrd</td>
-      <td> Plumpton</td>
-      <td> Plump 17th Nov</td>
-      <td> 2014-11-17T13:00:00.000Z</td>
-      <td> 7192335</td>
-      <td>     Master Vintage</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td> 1.116406554</td>
-      <td> 2m Nov Hrd</td>
-      <td> Plumpton</td>
-      <td> Plump 17th Nov</td>
-      <td> 2014-11-17T13:00:00.000Z</td>
-      <td> 7323360</td>
-      <td>          Al Guwair</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td> 1.116406554</td>
-      <td> 2m Nov Hrd</td>
-      <td> Plumpton</td>
-      <td> Plump 17th Nov</td>
-      <td> 2014-11-17T13:00:00.000Z</td>
-      <td> 6365550</td>
-      <td>        Epsom Flyer</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-<p/>
-
+```python
+    # First race summary
+    firstRaceDesc=summaryDesc.query('marketId=="'+marketId+'"')[['marketId','marketName',
+                                                         'event.name','event.venue','marketStartTime']]
+    firstRaceRunners=summaryRaces.query('marketId=="'+marketId+'"')[['selectionId','runnerName']]
+    print(firstRaceDesc)
+    print(firstRaceRunners)
+```
+```coffee
+          marketId   marketName     event.name event.venue  \
+    0  1.116413138  2m Hcap Chs  Fake 18th Nov    Fakenham   
+    
+                marketStartTime  
+    0  2014-11-18T15:30:00.000Z  
+       selectionId     runnerName
+    0      5718959      Carobello
+    1      7572682        Larteta
+    2      4363561   Dynamic Idol
+    3      4815491  Full Ov Beans
+```
 ```python
     # All exchange and starting prices to a depth of 2 max price of 20
     projection={'priceData':['EX_BEST_OFFERS','SP_AVAILABLE','SP_TRADED'],
                 'virtualise':False,
-                'exBestOffersOverrides':{'bestPricesDepth':2L,
+                'exBestOffersOverrides':{'bestPricesDepth':5L,
                                          'rollupModel':"STAKE",
                                          'rollupLimit':20L},
                 'rolloverStakes':False
      }
-
 
     # Get all the runners/prices book for this market
     # According to the projections
@@ -235,406 +145,113 @@ Each sample will need to have user,password,ssl certificate and app key set
       order_projection='ALL',
       match_projection='ROLLED_UP_BY_PRICE'
     )
+    # Note the book time
+    priceTime=datetime.datetime.now()
 
 
-    runnersPriceInFirstRace['market.book'][['marketId','lastMatchTime','totalAvailable','totalMatched','numberOfActiveRunners']]
-
+    print(runnersPriceInFirstRace['market.book'][['marketId','lastMatchTime',
+                                                  'totalAvailable','totalMatched',
+                                                  'numberOfActiveRunners']])
 ```
-
-
-<div style="max-height:1000px;max-width:1500px;overflow:auto;">
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>marketId</th>
-      <th>lastMatchTime</th>
-      <th>totalAvailable</th>
-      <th>totalMatched</th>
-      <th>numberOfActiveRunners</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td> 1.116406554</td>
-      <td> 2014-11-17T12:59:43.886Z</td>
-      <td> 266490.09</td>
-      <td> 724222.82</td>
-      <td> 10</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-<p/>
+```coffee
+          marketId             lastMatchTime  totalAvailable  totalMatched  \
+    0  1.116413138  2014-11-18T15:27:04.235Z       102182.84     191392.47   
+    
+       numberOfActiveRunners  
+    0                      4  
+```
 ```python
-
     runnerWithMostTotalMatched=runnersPriceInFirstRace['runners'].sort('totalMatched',ascending=False)
-
 
     # This is one particular runner
     runnerIdWithMostTotalMatched=runnerWithMostTotalMatched.ix[0,'selectionId']
 
-
     # Getthe overview price and volume for this selection
     runners=runnersPriceInFirstRace['runners']
     overview=runners[runners.selectionId==runnerIdWithMostTotalMatched]
-
-
-    # Show the overview price and volume for this selected runner
-    pd.merge(overview,firstRace[['selectionId','marketId','runnerName']],on=['selectionId','marketId'])
-
 ```
-
-
-<div style="max-height:1000px;max-width:1500px;overflow:auto;">
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>adjustmentFactor</th>
-      <th>handicap</th>
-      <th>lastPriceTraded</th>
-      <th>marketId</th>
-      <th>selectionId</th>
-      <th>status</th>
-      <th>totalMatched</th>
-      <th>runnerName</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td> 73.5</td>
-      <td> 0</td>
-      <td> 1.22</td>
-      <td> 1.116406554</td>
-      <td> 6865392</td>
-      <td> ACTIVE</td>
-      <td> 643910.59</td>
-      <td> Seedling</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-<p/>
 ```python
+    # Getthe overview price and volume for this selected runner
+    runnerOverview=pd.merge(overview,summaryRaces[['selectionId','marketId','runnerName']],
+                            on=['selectionId','marketId'])
 
     allsp=runnersPriceInFirstRace['runners.sp']
     sp=allsp[allsp.selectionId==runnerIdWithMostTotalMatched]
 
-
     # Show starting price summary
-    sp
-
+    print(sp)
+```
+```coffee
+       farPrice     marketId  nearPrice  selectionId
+    0      2.32  1.116413138          3      5718959
 ```
 
-
-<div style="max-height:1000px;max-width:1500px;overflow:auto;">
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>farPrice</th>
-      <th>marketId</th>
-      <th>nearPrice</th>
-      <th>selectionId</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td> 1.047462</td>
-      <td> 1.116406554</td>
-      <td> 1.2</td>
-      <td> 6865392</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-<p/>
 ```python
-
-
     # Show back stake taken
     backStakeTaken=runnersPriceInFirstRace['runners.sp.backStakeTaken']
-    backStakeTaken[backStakeTaken.selectionId==runnerIdWithMostTotalMatched]
-
+    print(backStakeTaken[backStakeTaken.selectionId==runnerIdWithMostTotalMatched])
 ```
-
-
-<div style="max-height:1000px;max-width:1500px;overflow:auto;">
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>marketId</th>
-      <th>price</th>
-      <th>selectionId</th>
-      <th>size</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td> 1.116406554</td>
-      <td> 1.01</td>
-      <td> 6865392</td>
-      <td> 7574.55</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td> 1.116406554</td>
-      <td> 1.20</td>
-      <td> 6865392</td>
-      <td>    4.01</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td> 1.116406554</td>
-      <td> 1.33</td>
-      <td> 6865392</td>
-      <td>    2.00</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td> 1.116406554</td>
-      <td> 1.40</td>
-      <td> 6865392</td>
-      <td>   14.00</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td> 1.116406554</td>
-      <td> 1.48</td>
-      <td> 6865392</td>
-      <td>   41.27</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td> 1.116406554</td>
-      <td> 1.59</td>
-      <td> 6865392</td>
-      <td>   60.75</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td> 1.116406554</td>
-      <td> 2.06</td>
-      <td> 6865392</td>
-      <td>   56.60</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td> 1.116406554</td>
-      <td> 3.00</td>
-      <td> 6865392</td>
-      <td>   40.00</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td> 1.116406554</td>
-      <td> 5.00</td>
-      <td> 6865392</td>
-      <td>    9.98</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td> 1.116406554</td>
-      <td> 6.00</td>
-      <td> 6865392</td>
-      <td>   30.00</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-<p/>
-
+```coffee
+          marketId  price  selectionId    size
+    0  1.116413138   1.01      5718959  891.27
+    1  1.116413138   1.80      5718959  186.34
+    2  1.116413138   3.00      5718959  980.99
+    3  1.116413138   3.45      5718959  498.04
+    4  1.116413138   6.00      5718959    5.00
+```
 ```python
-
     # Show lay liabilty taken
     layLiabilityTaken=runnersPriceInFirstRace['runners.sp.layLiabilityTaken']
-    layLiabilityTaken[layLiabilityTaken.selectionId==runnerIdWithMostTotalMatched]
-
-
+    print(layLiabilityTaken[layLiabilityTaken.selectionId==runnerIdWithMostTotalMatched])
 ```
-
-<div style="max-height:1000px;max-width:1500px;overflow:auto;">
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>marketId</th>
-      <th>price</th>
-      <th>selectionId</th>
-      <th>size</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td> 1.116406554</td>
-      <td> 1000.0</td>
-      <td> 6865392</td>
-      <td> 681.16</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td> 1.116406554</td>
-      <td>    1.5</td>
-      <td> 6865392</td>
-      <td>  15.97</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-<p/>
+```coffee
+          marketId    price  selectionId    size
+    0  1.116413138  1000.00      5718959  823.10
+    1  1.116413138     3.20      5718959   15.95
+    2  1.116413138     2.32      5718959  967.62
+```
 ```python
-
     # Get all lay prices for all the runners in the first race
     availableToLay=runnersPriceInFirstRace['runners.ex.availableToLay']
     # Get the lay prices for the one with the most total matched
     runnerIdWithMostTotalMatchedLayPrices=availableToLay[availableToLay.selectionId == runnerIdWithMostTotalMatched]
     # Rename to TotalAvailableToLay
-    runnerIdWithMostTotalMatchedLayPrices=runnerIdWithMostTotalMatchedLayPrices.rename(columns={'size': 'TotalAvailableToLay'})
-
-
-    runnerIdWithMostTotalMatchedLayPrices
-
-
-```
-
-
-<div style="max-height:1000px;max-width:1500px;overflow:auto;">
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>marketId</th>
-      <th>price</th>
-      <th>selectionId</th>
-      <th>TotalAvailableToLay</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td> 1.116406554</td>
-      <td> 1.22</td>
-      <td> 6865392</td>
-      <td>  123.12</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td> 1.116406554</td>
-      <td> 1.23</td>
-      <td> 6865392</td>
-      <td> 5615.98</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-<p/>
-
-```python
+    runnerIdWithMostTotalMatchedLayPrices=runnerIdWithMostTotalMatchedLayPrices.rename(
+    columns={'size': 'LayTotal','price':'LayPrice'})
 
     # Get all back prices for all the runners in the first race
     availableToBack=runnersPriceInFirstRace['runners.ex.availableToBack']
     # Get the back prices for the one with the most total matched
     runnerIdWithMostTotalMatchedBackPrices=availableToBack[availableToBack.selectionId == runnerIdWithMostTotalMatched]
     # Rename to TotalAvailableToBack
-    runnerIdWithMostTotalMatchedBackPrices=runnerIdWithMostTotalMatchedBackPrices.rename(columns={'size': 'TotalAvailableToBack'})
-
-
-    runnerIdWithMostTotalMatchedBackPrices
-
-
+    runnerIdWithMostTotalMatchedBackPrices=runnerIdWithMostTotalMatchedBackPrices.rename(
+    columns={'size': 'BackTotal', 'price':'BackPrice'})
 ```
-
-<div style="max-height:1000px;max-width:1500px;overflow:auto;">
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>marketId</th>
-      <th>price</th>
-      <th>selectionId</th>
-      <th>TotalAvailableToBack</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td> 1.116406554</td>
-      <td> 1.21</td>
-      <td> 6865392</td>
-      <td>  5471.57</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td> 1.116406554</td>
-      <td> 1.20</td>
-      <td> 6865392</td>
-      <td> 10690.61</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-
-<p/>
 ```python
-
     # Merge the prices by appending to make a price ladder
-    priceLadder=runnerIdWithMostTotalMatchedBackPrices.append(runnerIdWithMostTotalMatchedLayPrices)[['price','TotalAvailableToBack','TotalAvailableToLay']].sort('price')
-    priceLadder
-
+    priceLadder=runnerIdWithMostTotalMatchedBackPrices[['BackTotal','BackPrice']].join(
+    runnerIdWithMostTotalMatchedLayPrices[['LayPrice','LayTotal']])
+    print("Market:{0:s} {1:s} {2:s} {3:%I:%M%p}".format(firstRaceDesc['marketName'][0],
+                                                 firstRaceDesc['event.name'][0],
+                                                 firstRaceDesc['event.venue'][0],
+                                                 dateutil.parser.parse(firstRaceDesc['marketStartTime'][0]))
+    )
+    print("Runner:{0:s} Total {1:f} ".format(runnerOverview['runnerName'][0],
+                                                 runnerOverview['totalMatched'][0]))
+    print('Book at {0:s}'.format(priceTime.isoformat(' ')))
+    print(priceLadder)
 ```
-
-
-<div style="max-height:1000px;max-width:1500px;overflow:auto;">
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>price</th>
-      <th>TotalAvailableToBack</th>
-      <th>TotalAvailableToLay</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>1</th>
-      <td> 1.20</td>
-      <td> 10690.61</td>
-      <td>     NaN</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td> 1.21</td>
-      <td>  5471.57</td>
-      <td>     NaN</td>
-    </tr>
-    <tr>
-      <th>0</th>
-      <td> 1.22</td>
-      <td>      NaN</td>
-      <td>  123.12</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td> 1.23</td>
-      <td>      NaN</td>
-      <td> 5615.98</td>
-    </tr>
-  </tbody>
-</table>
-</div>
-<p/>
+```coffee
+    Market:2m Hcap Chs Fake 18th Nov Fakenham 03:30PM
+    Runner:Carobello Total 111261.690000 
+    Book at 2014-11-18 15:27:04.563642
+       BackTotal  BackPrice  LayPrice  LayTotal
+    0    1075.11       3.00      3.05    625.80
+    1     458.76       2.98      3.10    538.69
+    2    1314.45       2.96      3.15    350.37
+    3    1383.35       2.94      3.20    491.22
+    4     524.50       2.92      3.25    651.02
+```
 ```python
-
-
     client.logout()
 ```
